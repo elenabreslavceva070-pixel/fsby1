@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Интерактивный тренажёр: Бухгалтерский баланс + ОФР</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, 'Roboto', sans-serif;
+            padding: 2rem 1rem;
+        }
+
+        .trainer-container {
+            max-width: 1400px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.02);
+            overflow-x: auto;
+            padding: 1.5rem 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .task-block {
+            padding: 0.5rem 0 1rem 0;
+            margin-bottom: 1.2rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #1a3b4f;
+            border-bottom: 1px solid #e2edf7;
+        }
+        .task-block strong {
+            color: #1a5276;
+            font-weight: 700;
+        }
+        .task-block .wire {
+            display: inline-block;
+            background: #eef4fc;
+            border: 1px solid #cde0ef;
+            border-radius: 6px;
+            padding: 0 0.5rem;
+            font-family: 'Consolas', 'Menlo', monospace;
+            font-size: 0.78rem;
+            color: #1f4b66;
+            white-space: nowrap;
+        }
+        .task-block ul {
+            margin: 0.2rem 0 0 1.2rem;
+            padding: 0;
+            list-style: none;
+        }
+        .task-block ul li {
+            position: relative;
+            padding-left: 1rem;
+            margin-bottom: 0.1rem;
+            font-size: 0.88rem;
+        }
+        .task-block ul li::before {
+            content: "•";
+            color: #2c7cb0;
+            font-weight: 700;
+            position: absolute;
+            left: 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e2edf7;
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #5f8dae;
+            cursor: pointer;
+            border-radius: 40px;
+            transition: all 0.2s ease;
+            letter-spacing: -0.2px;
+        }
+
+        .tab-btn:hover {
+            background-color: #eef4fc;
+            color: #2c6e9e;
+        }
+
+        .tab-btn.active {
+            background-color: #eef4fc;
+            color: #1e5a7c;
+            border-bottom: 3px solid #95CAFA;
+            border-radius: 40px 40px 20px 20px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .balance-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            letter-spacing: -0.01em;
+            table-layout: fixed;
+        }
+
+        .balance-table th:nth-child(1),
+        .balance-table td:nth-child(1) {
+            width: 38%;
+            min-width: 200px;
+        }
+        .balance-table th:nth-child(2),
+        .balance-table td:nth-child(2) {
+            width: 20%;
+            min-width: 130px;
+        }
+        .balance-table th:nth-child(3),
+        .balance-table td:nth-child(3) {
+            width: 20%;
+            min-width: 130px;
+        }
+        .balance-table th:nth-child(4),
+        .balance-table td:nth-child(4) {
+            width: 22%;
+            min-width: 130px;
+        }
+
+        .balance-table.three-cols th:nth-child(1),
+        .balance-table.three-cols td:nth-child(1) {
+            width: 48%;
+        }
+        .balance-table.three-cols th:nth-child(2),
+        .balance-table.three-cols td:nth-child(2) {
+            width: 26%;
+        }
+        .balance-table.three-cols th:nth-child(3),
+        .balance-table.three-cols td:nth-child(3) {
+            width: 26%;
+        }
+
+        .balance-table th,
+        .balance-table td {
+            border: 1.5px solid #95CAFA;
+            padding: 0.7rem 0.6rem;
+            vertical-align: middle;
+            text-align: left;
+            background-color: white;
+            transition: background 0.2s ease;
+        }
+
+        .balance-table th {
+            background-color: #f9fcff;
+            font-weight: 600;
+            color: #1a3b4f;
+            font-size: 0.85rem;
+            letter-spacing: 0.3px;
+            border-bottom-width: 2px;
+        }
+
+        .balance-table td:first-child,
+        .balance-table th:first-child {
+            font-weight: 500;
+            background-color: #ffffff;
+            color: #1e4663;
+            border-left: 1.5px solid #95CAFA;
+        }
+
+        .elegant-select {
+            width: 100%;
+            padding: 0.45rem 0.6rem;
+            font-family: 'Segoe UI', 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #0b2b3b;
+            background-color: #ffffff;
+            border: 1.5px solid #cde3f5;
+            border-radius: 16px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%233b7a9e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat;
+            background-position: right 0.6rem center;
+            background-size: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .elegant-select:hover {
+            border-color: #7bb3d6;
+            background-color: #fefefe;
+        }
+
+        .elegant-select:focus {
+            border-color: #3f8ec7;
+            box-shadow: 0 0 0 3px rgba(69, 142, 191, 0.2);
+        }
+
+        .static-cell {
+            font-weight: 500;
+            color: #1f3e53;
+            background-color: #fefefe;
+            font-size: 0.85rem;
+        }
+
+        .cell-correct {
+            background-color: #e2f7e6 !important;
+        }
+        .cell-incorrect {
+            background-color: #ffe6e5 !important;
+        }
+        .cell-neutral {
+            background-color: white !important;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            background: none;
+            border: 1.5px solid #95CAFA;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            font-family: inherit;
+            font-weight: 500;
+            font-size: 0.8rem;
+            color: #2c6e9e;
+            cursor: pointer;
+            transition: 0.2s;
+            background-color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-button:hover {
+            background-color: #e8f1f9;
+            border-color: #6ea8cf;
+            color: #1c577b;
+            transform: translateY(-1px);
+        }
+
+        .action-button.primary {
+            background-color: #eef4fc;
+            border-color: #7bb3d6;
+            font-weight: 600;
+        }
+
+        .balance-table {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+
+        @media (max-width: 850px) {
+            .balance-table th, .balance-table td {
+                padding: 0.5rem 0.4rem;
+            }
+            .elegant-select {
+                font-size: 0.7rem;
+                padding: 0.35rem 0.5rem;
+            }
+            .static-cell {
+                font-size: 0.75rem;
+            }
+            .tab-btn {
+                padding: 0.4rem 1rem;
+                font-size: 0.8rem;
+            }
+            .task-block {
+                font-size: 0.8rem;
+                padding: 0.3rem 0 0.8rem 0;
+            }
+            .task-block .wire {
+                font-size: 0.7rem;
+                padding: 0 0.3rem;
+            }
+            .task-block ul li {
+                font-size: 0.78rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="trainer-container">
+
+    <div class="task-block">
+        У компании на конец 2026 года есть договор на поставку продукции с рассрочкой платежа в течение трех лет.<br>
+        Выручка признана единовременно в полной сумме в 2025 году в размере 4 000 000 руб. без НДС. По правилам ФСБУ 9/2025 сумма выручки должна составить 3 300 000 руб., а сумма процентов — 700 000 руб. При этом сумма процентов, приходящаяся на 2025 год, составляет 200 000 руб., на 2026 год — 300 000 руб. Сумма процентов, которая подлежит признанию после 31.12.2026 года, — 200 000 руб.<br>
+        В связи с корректировкой доходов в бухгалтерском учете изменилась величина отложенных налоговых активов (ОНА). На 31.12.2025 года ОНА увеличились на 125 000 руб., а на 31.12.2026 год уменьшились на 75 000 руб.<br>
+        В межотчетный период бухгалтер делает следующие проводки:
+        <ul>
+            <li><span class="wire">Дт 84 Кт 62</span> — 500 000 руб. (4 000 000 - 3 300 000 - 200 000) — корректировка доходов 2025 г.</li>
+            <li><span class="wire">Дт 09 Кт 84</span> — 125 000 руб. — корректировка ОНА за 2025 г.</li>
+            <li><span class="wire">Дт 62 Кт 84</span> — 300 000 руб. — корректировка ДЗ на сумму % за 2026 г.</li>
+            <li><span class="wire">Дт 84 Кт 09</span> — 75 000 руб. — корректировка ОНА за 2026 г.</li>
+        </ul>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="balance">📊 Бухгалтерский баланс</button>
+        <button class="tab-btn" data-tab="pl">📈 Отчет о финансовых результатах</button>
+    </div>
+
+    <div id="tab-balance" class="tab-content active">
+        <div class="toolbar">
+            <button class="action-button" id="resetBalanceBtn">⟳ Сбросить баланс</button>
+            <button class="action-button primary" id="checkBalanceBtn">✓ Проверить баланс</button>
+        </div>
+        <table class="balance-table" id="balanceTable">
+            <thead>
+                <tr><th>Наименование показателя</th><th>На 31 декабря 2027 г.</th><th>На 31 декабря 2026 г.</th><th>На 31 декабря 2025 г.</th></tr>
+            </thead>
+            <tbody id="balanceBody"></tbody>
+        </table>
+    </div>
+
+    <div id="tab-pl" class="tab-content">
+        <div class="toolbar">
+            <button class="action-button" id="resetPlBtn">⟳ Сбросить ОФР</button>
+            <button class="action-button primary" id="checkPlBtn">✓ Проверить ОФР</button>
+        </div>
+        <table class="balance-table three-cols" id="plTable">
+            <thead>
+                <tr><th>Наименование показателя</th><th>На 31 декабря 2027 г.</th><th>На 31 декабря 2026 г.</th></tr>
+            </thead>
+            <tbody id="plBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const balanceRows = [
+        { name: "Отложенные налоговые активы", correct2025: 125, correct2026: 50, correct2027: null },
+        { name: "Итого по разделу I", correct2025: 125, correct2026: 50, correct2027: null },
+        { name: "Дебиторская задолженность", correct2025: -500, correct2026: -200, correct2027: null },
+        { name: "Итого по разделу II", correct2025: -500, correct2026: -200, correct2027: null },
+        { name: "Баланс", correct2025: -375, correct2026: -150, correct2027: null },
+        { name: "Нераспределенная прибыль (непокрытый убыток)", correct2025: -375, correct2026: -150, correct2027: null },
+        { name: "Итого по разделу III", correct2025: -375, correct2026: -150, correct2027: null },
+        { name: "Баланс", correct2025: -375, correct2026: -150, correct2027: null }
+    ];
+    const balanceUnique = [125, 50, -500, -200, -375, -150].sort((a,b) => a - b);
+    
+    const plRows = [
+        { name: "Проценты к получению", correct2026: 300, correct2027: null },
+        { name: "Прибыль (убыток) от продолжающейся деятельности до налогообложения", correct2026: 300, correct2027: null },
+        { name: "Налог на прибыль организаций", correct2026: 75, correct2027: null },
+        { name: "отложенный налог на прибыль организаций", correct2026: 75, correct2027: null },
+        { name: "Чистая прибыль (убыток)", correct2026: 225, correct2027: null }
+    ];
+    const plUnique = [300, 75, 225].sort((a,b) => a - b);
+    
+    function getOptionsHtml(uniqueVals, includeEmpty = true) {
+        let html = '';
+        if (includeEmpty) html += `<option value="__empty__" selected>—</option>`;
+        uniqueVals.forEach(val => { html += `<option value="${val}">${val}</option>`; });
+        return html;
+    }
+    
+    let balanceSelections = {};
+    let balanceValidation = {};
+    
+    function initBalance() {
+        balanceRows.forEach((_, idx) => {
+            balanceSelections[`${idx}_2025`] = null;
+            balanceSelections[`${idx}_2026`] = null;
+            balanceSelections[`${idx}_2027`] = null;
+            balanceValidation[`${idx}_2025`] = null;
+            balanceValidation[`${idx}_2026`] = null;
+            balanceValidation[`${idx}_2027`] = null;
+        });
+    }
+    
+    function getBalanceCorrect(idx, year) {
+        const row = balanceRows[idx];
+        if (year === 2025) return row.correct2025;
+        if (year === 2026) return row.correct2026;
+        return row.correct2027;
+    }
+    
+    function applyBalanceStyles() {
+        balanceRows.forEach((_, idx) => {
+            [2025, 2026, 2027].forEach(year => {
+                const td = document.getElementById(`balance_cell_${idx}_${year}`);
+                if (td) {
+                    td.classList.remove('cell-correct', 'cell-incorrect', 'cell-neutral');
+                    const status = balanceValidation[`${idx}_${year}`];
+                    if (status === 'correct') td.classList.add('cell-correct');
+                    else if (status === 'incorrect') td.classList.add('cell-incorrect');
+                    else td.classList.add('cell-neutral');
+                }
+            });
+        });
+    }
+    
+    function checkBalance() {
+        balanceRows.forEach((_, idx) => {
+            [2025, 2026].forEach(year => {
+                const key = `${idx}_${year}`;
+                const selected = balanceSelections[key];
+                const correct = getBalanceCorrect(idx, year);
+                if (selected !== null && selected === correct) balanceValidation[key] = 'correct';
+                else if (selected !== null && selected !== correct) balanceValidation[key] = 'incorrect';
+                else balanceValidation[key] = null;
+            });
+            const key2027 = `${idx}_2027`;
+            const selected2027 = balanceSelections[key2027];
+            balanceValidation[key2027] = (selected2027 === null) ? 'correct' : 'incorrect';
+        });
+        applyBalanceStyles();
+    }
+    
+    function renderBalanceTable() {
+        const tbody = document.getElementById('balanceBody');
+        tbody.innerHTML = '';
+        balanceRows.forEach((row, idx) => {
+            const tr = document.createElement('tr');
+            const tdName = document.createElement('td');
+            tdName.className = 'static-cell';
+            tdName.textContent = row.name;
+            tr.appendChild(tdName);
+            
+            const years = [2027, 2026, 2025];
+            years.forEach(year => {
+                const td = document.createElement('td');
+                td.id = `balance_cell_${idx}_${year}`;
+                td.classList.add('cell-neutral');
+                const select = document.createElement('select');
+                select.className = 'elegant-select';
+                select.innerHTML = getOptionsHtml(balanceUnique, true);
+                const saved = balanceSelections[`${idx}_${year}`];
+                select.value = (saved !== null && saved !== undefined) ? saved.toString() : '__empty__';
+                select.addEventListener('change', (e) => {
+                    const newVal = e.target.value;
+                    if (newVal === '__empty__') balanceSelections[`${idx}_${year}`] = null;
+                    else balanceSelections[`${idx}_${year}`] = Number(newVal);
+                    balanceValidation[`${idx}_${year}`] = null;
+                    const cell = document.getElementById(`balance_cell_${idx}_${year}`);
+                    if (cell) { cell.classList.remove('cell-correct', 'cell-incorrect'); cell.classList.add('cell-neutral'); }
+                });
+                td.appendChild(select);
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+        for (let idx = 0; idx < balanceRows.length; idx++) {
+            for (let year of [2025, 2026, 2027]) {
+                const td = document.getElementById(`balance_cell_${idx}_${year}`);
+                if (td && td.firstChild) td.firstChild.id = `balance_select_${idx}_${year}`;
+            }
+        }
+    }
+    
+    function resetBalance() {
+        for (let idx = 0; idx < balanceRows.length; idx++) {
+            balanceSelections[`${idx}_2025`] = null;
+            balanceSelections[`${idx}_2026`] = null;
+            balanceSelections[`${idx}_2027`] = null;
+            balanceValidation[`${idx}_2025`] = null;
+            balanceValidation[`${idx}_2026`] = null;
+            balanceValidation[`${idx}_2027`] = null;
+            for (let year of [2025, 2026, 2027]) {
+                const sel = document.getElementById(`balance_select_${idx}_${year}`);
+                if (sel) sel.value = '__empty__';
+                const cell = document.getElementById(`balance_cell_${idx}_${year}`);
+                if (cell) { cell.classList.remove('cell-correct', 'cell-incorrect'); cell.classList.add('cell-neutral'); }
+            }
+        }
+    }
+    
+    let plSelections = {};
+    let plValidation = {};
+    
+    function initPl() {
+        plRows.forEach((_, idx) => {
+            plSelections[`${idx}_2026`] = null;
+            plSelections[`${idx}_2027`] = null;
+            plValidation[`${idx}_2026`] = null;
+            plValidation[`${idx}_2027`] = null;
+        });
+    }
+    
+    function getPlCorrect(idx, year) {
+        const row = plRows[idx];
+        if (year === 2026) return row.correct2026;
+        return row.correct2027;
+    }
+    
+    function applyPlStyles() {
+        plRows.forEach((_, idx) => {
+            [2026, 2027].forEach(year => {
+                const td = document.getElementById(`pl_cell_${idx}_${year}`);
+                if (td) {
+                    td.classList.remove('cell-correct', 'cell-incorrect', 'cell-neutral');
+                    const status = plValidation[`${idx}_${year}`];
+                    if (status === 'correct') td.classList.add('cell-correct');
+                    else if (status === 'incorrect') td.classList.add('cell-incorrect');
+                    else td.classList.add('cell-neutral');
+                }
+            });
+        });
+    }
+    
+    function checkPl() {
+        plRows.forEach((_, idx) => {
+            const key2026 = `${idx}_2026`;
+            const sel2026 = plSelections[key2026];
+            const correct2026 = getPlCorrect(idx, 2026);
+            if (sel2026 !== null && sel2026 === correct2026) plValidation[key2026] = 'correct';
+            else if (sel2026 !== null && sel2026 !== correct2026) plValidation[key2026] = 'incorrect';
+            else plValidation[key2026] = null;
+            const key2027 = `${idx}_2027`;
+            const sel2027 = plSelections[key2027];
+            plValidation[key2027] = (sel2027 === null) ? 'correct' : 'incorrect';
+        });
+        applyPlStyles();
+    }
+    
+    function renderPlTable() {
+        const tbody = document.getElementById('plBody');
+        tbody.innerHTML = '';
+        plRows.forEach((row, idx) => {
+            const tr = document.createElement('tr');
+            const tdName = document.createElement('td');
+            tdName.className = 'static-cell';
+            tdName.textContent = row.name;
+            tr.appendChild(tdName);
+            const years = [2027, 2026];
+            years.forEach(year => {
+                const td = document.createElement('td');
+                td.id = `pl_cell_${idx}_${year}`;
+                td.classList.add('cell-neutral');
+                const select = document.createElement('select');
+                select.className = 'elegant-select';
+                select.id = `pl_select_${idx}_${year}`;
+                select.innerHTML = getOptionsHtml(plUnique, true);
+                const saved = plSelections[`${idx}_${year}`];
+                select.value = (saved !== null && saved !== undefined) ? saved.toString() : '__empty__';
+                select.addEventListener('change', (e) => {
+                    const newVal = e.target.value;
+                    if (newVal === '__empty__') plSelections[`${idx}_${year}`] = null;
+                    else plSelections[`${idx}_${year}`] = Number(newVal);
+                    plValidation[`${idx}_${year}`] = null;
+                    const cell = document.getElementById(`pl_cell_${idx}_${year}`);
+                    if (cell) { cell.classList.remove('cell-correct', 'cell-incorrect'); cell.classList.add('cell-neutral'); }
+                });
+                td.appendChild(select);
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+    }
+    
+    function resetPl() {
+        for (let idx = 0; idx < plRows.length; idx++) {
+            plSelections[`${idx}_2026`] = null;
+            plSelections[`${idx}_2027`] = null;
+            plValidation[`${idx}_2026`] = null;
+            plValidation[`${idx}_2027`] = null;
+            const sel2026 = document.getElementById(`pl_select_${idx}_2026`);
+            const sel2027 = document.getElementById(`pl_select_${idx}_2027`);
+            if (sel2026) sel2026.value = '__empty__';
+            if (sel2027) sel2027.value = '__empty__';
+            const cell2026 = document.getElementById(`pl_cell_${idx}_2026`);
+            const cell2027 = document.getElementById(`pl_cell_${idx}_2027`);
+            if (cell2026) { cell2026.classList.remove('cell-correct', 'cell-incorrect'); cell2026.classList.add('cell-neutral'); }
+            if (cell2027) { cell2027.classList.remove('cell-correct', 'cell-incorrect'); cell2027.classList.add('cell-neutral'); }
+        }
+    }
+    
+    initBalance();
+    initPl();
+    renderBalanceTable();
+    renderPlTable();
+    
+    document.getElementById('resetBalanceBtn').addEventListener('click', resetBalance);
+    document.getElementById('checkBalanceBtn').addEventListener('click', checkBalance);
+    document.getElementById('resetPlBtn').addEventListener('click', resetPl);
+    document.getElementById('checkPlBtn').addEventListener('click', checkPl);
+    
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+    tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.getAttribute('data-tab');
+            tabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            contents.forEach(content => content.classList.remove('active'));
+            if (tabId === 'balance') document.getElementById('tab-balance').classList.add('active');
+            else if (tabId === 'pl') document.getElementById('tab-pl').classList.add('active');
+        });
+    });
+</script>
+</body>
+</html>
