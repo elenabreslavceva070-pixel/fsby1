@@ -39,6 +39,14 @@
             line-height: 1.5;
             color: #1a3b4f;
             border-bottom: 1px solid #e2edf7;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+        .task-text {
+            flex: 1 1 80%;
         }
         .task-block strong {
             color: #1a5276;
@@ -72,6 +80,169 @@
             font-weight: 700;
             position: absolute;
             left: 0;
+        }
+
+        .hint-button {
+            background: #f9e57c;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.6rem;
+            line-height: 1;
+            color: #5f3e00;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: 0.2s;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.2rem;
+        }
+        .hint-button:hover {
+            transform: scale(1.06);
+            background: #f7da4a;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        /* Модальное окно подсказки с готовыми ответами */
+        .hint-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+        .hint-modal.active {
+            display: flex;
+        }
+        .hint-content {
+            max-width: 1100px;
+            width: 100%;
+            max-height: 92vh;
+            background: white;
+            border-radius: 32px;
+            padding: 1.8rem 1.8rem 1.5rem;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            overflow-y: auto;
+            position: relative;
+            animation: fadeIn 0.2s ease;
+        }
+        .hint-content h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a3b4f;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .hint-content .close-hint {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            line-height: 1;
+            color: #4a6f8a;
+            cursor: pointer;
+            padding: 0 0.4rem;
+        }
+        .hint-content .close-hint:hover {
+            color: #1a3b4f;
+        }
+        .hint-content .hint-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #e2edf7;
+            padding-bottom: 0.5rem;
+        }
+        .hint-content .hint-tab-btn {
+            background: none;
+            border: none;
+            padding: 0.4rem 1.2rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #5f8dae;
+            cursor: pointer;
+            border-radius: 40px;
+            transition: all 0.2s ease;
+        }
+        .hint-content .hint-tab-btn:hover {
+            background-color: #eef4fc;
+            color: #2c6e9e;
+        }
+        .hint-content .hint-tab-btn.active {
+            background-color: #eef4fc;
+            color: #1e5a7c;
+            border-bottom: 3px solid #95CAFA;
+            border-radius: 40px 40px 20px 20px;
+        }
+        .hint-tab-content {
+            display: none;
+            animation: fadeIn 0.2s ease;
+        }
+        .hint-tab-content.active {
+            display: block;
+        }
+        .hint-content table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+        .hint-content table th,
+        .hint-content table td {
+            border: 1.5px solid #95CAFA;
+            padding: 0.5rem 0.6rem;
+            text-align: left;
+            background-color: white;
+        }
+        .hint-content table th {
+            background-color: #f9fcff;
+            font-weight: 600;
+            color: #1a3b4f;
+            font-size: 0.8rem;
+        }
+        .hint-content table td:first-child {
+            font-weight: 500;
+            color: #1e4663;
+        }
+        .hint-content .filled-answer {
+            background-color: #e2f7e6 !important;
+            font-weight: 600;
+            color: #0f5a2a;
+        }
+        .hint-content .filled-empty {
+            background-color: #f2f4f6 !important;
+            color: #6b7b87;
+            font-weight: 500;
+        }
+        .hint-content .hint-note {
+            margin-top: 0.8rem;
+            padding: 0.6rem 1rem;
+            background: #f0f7fe;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: #1a5276;
+        }
+        .hint-content .hint-note strong {
+            color: #0b3b5a;
+        }
+        @media (max-width: 700px) {
+            .hint-content { padding: 1rem; }
+            .hint-content table { font-size: 0.7rem; }
+            .hint-content table th, .hint-content table td { padding: 0.3rem 0.3rem; }
         }
 
         .tabs {
@@ -316,16 +487,19 @@
 <div class="trainer-container">
 
     <div class="task-block">
-        У вас на конец 2026 года есть договор на поставку продукции с рассрочкой платежа в течение трех лет.<br>
-        Выручка признали единовременно в полной сумме в 2025 году в размере 4 000 000 руб. без НДС. По правилам ФСБУ 9/2025 сумма выручки должна составить 3 300 000 руб., а сумма процентов — 700 000 руб. При этом сумма процентов, приходящаяся на 2025 год, составляет 200 000 руб., на 2026 год — 300 000 руб. Сумма процентов, которая вы признаете после 31.12.2026 года, — 200 000 руб.<br>
-        В связи с корректировкой доходов в бухгалтерском учете изменилась величина отложенных налоговых активов (ОНА). На 31.12.2025 года ОНА увеличились на 125 000 руб., а на 31.12.2026 год уменьшились на 75 000 руб.<br>
-        В межотчетный периоде вы делаете следующие проводки:
-        <ul>
-            <li><span class="wire">Дт 84 Кт 62</span> — 500 000 руб. (4 000 000 - 3 300 000 - 200 000) — корректировка доходов 2025 г.</li>
-            <li><span class="wire">Дт 09 Кт 84</span> — 125 000 руб. — корректировка ОНА за 2025 г.</li>
-            <li><span class="wire">Дт 62 Кт 84</span> — 300 000 руб. — корректировка ДЗ на сумму % за 2026 г.</li>
-            <li><span class="wire">Дт 84 Кт 09</span> — 75 000 руб. — корректировка ОНА за 2026 г.</li>
-        </ul>
+        <div class="task-text">
+            У вас на конец 2026 года есть договор на поставку продукции с рассрочкой платежа в течение трех лет.<br>
+            Выручку признали единовременно в полной сумме в 2025 году в размере 4 000 000 руб. без НДС. По правилам ФСБУ 9/2025 сумма выручки должна составить 3 300 000 руб., а сумма процентов — 700 000 руб. При этом сумма процентов, приходящаяся на 2025 год, составляет 200 000 руб., на 2026 год — 300 000 руб. Сумма процентов, которая вы признаете после 31.12.2026 года, — 200 000 руб.<br>
+            В связи с корректировкой доходов в бухгалтерском учете изменилась величина отложенных налоговых активов (ОНА). На 31.12.2025 года ОНА увеличились на 125 000 руб., а на 31.12.2026 год уменьшились на 75 000 руб.<br>
+            В межотчетный периоде вы делаете следующие проводки:
+            <ul>
+                <li><span class="wire">Дт 84 Кт 62</span> — 500 000 руб. (4 000 000 - 3 300 000 - 200 000) — корректировка доходов 2025 г.</li>
+                <li><span class="wire">Дт 09 Кт 84</span> — 125 000 руб. — корректировка ОНА за 2025 г.</li>
+                <li><span class="wire">Дт 62 Кт 84</span> — 300 000 руб. — корректировка ДЗ на сумму % за 2026 г.</li>
+                <li><span class="wire">Дт 84 Кт 09</span> — 75 000 руб. — корректировка ОНА за 2026 г.</li>
+            </ul>
+        </div>
+        <button class="hint-button" id="hintBtn" aria-label="Подсказка">💡</button>
     </div>
 
     <div class="tabs">
@@ -357,6 +531,66 @@
             </thead>
             <tbody id="plBody"></tbody>
         </table>
+    </div>
+</div>
+
+<!-- Модальное окно подсказки с готовыми ответами -->
+<div class="hint-modal" id="hintModal">
+    <div class="hint-content">
+        <button class="close-hint" id="closeHintBtn">&times;</button>
+        <h2><span>💡</span> Правильные ответы — заполненный баланс и ОФР</h2>
+        
+        <div class="hint-tabs">
+            <button class="hint-tab-btn active" data-hint-tab="hint-balance">📊 Баланс</button>
+            <button class="hint-tab-btn" data-hint-tab="hint-pl">📈 ОФР</button>
+        </div>
+
+        <!-- Баланс в подсказке -->
+        <div id="hint-balance" class="hint-tab-content active">
+            <table>
+                <thead>
+                    <tr><th>Наименование показателя</th><th>На 31 декабря 2027 г.</th><th>На 31 декабря 2026 г.</th><th>На 31 декабря 2025 г.</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Отложенные налоговые активы</td><td class="filled-empty">—</td><td class="filled-answer">50</td><td class="filled-answer">125</td></tr>
+                    <tr><td>Итого по разделу I</td><td class="filled-empty">—</td><td class="filled-answer">50</td><td class="filled-answer">125</td></tr>
+                    <tr><td>Дебиторская задолженность</td><td class="filled-empty">—</td><td class="filled-answer">-200</td><td class="filled-answer">-500</td></tr>
+                    <tr><td>Итого по разделу II</td><td class="filled-empty">—</td><td class="filled-answer">-200</td><td class="filled-answer">-500</td></tr>
+                    <tr><td>Баланс</td><td class="filled-empty">—</td><td class="filled-answer">-150</td><td class="filled-answer">-375</td></tr>
+                    <tr><td>Нераспределенная прибыль (непокрытый убыток)</td><td class="filled-empty">—</td><td class="filled-answer">-150</td><td class="filled-answer">-375</td></tr>
+                    <tr><td>Итого по разделу III</td><td class="filled-empty">—</td><td class="filled-answer">-150</td><td class="filled-answer">-375</td></tr>
+                    <tr><td>Баланс</td><td class="filled-empty">—</td><td class="filled-answer">-150</td><td class="filled-answer">-375</td></tr>
+                </tbody>
+            </table>
+            <div class="hint-note">
+                <strong>📌 Пояснение:</strong> В 2027 году все корректировки уже учтены, поэтому значения отсутствуют (прочерк).<br>
+                ОНА 2025 = +125, ОНА 2026 = 125 − 75 = 50.<br>
+                ДЗ 2025 = −500, ДЗ 2026 = −500 + 300 = −200.<br>
+                Прибыль 2025 = −500 + 125 = −375, Прибыль 2026 = −375 + 300 − 75 = −150.
+            </div>
+        </div>
+
+        <!-- ОФР в подсказке -->
+        <div id="hint-pl" class="hint-tab-content">
+            <table>
+                <thead>
+                    <tr><th>Наименование показателя</th><th>На 31 декабря 2027 г.</th><th>На 31 декабря 2026 г.</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Проценты к получению</td><td class="filled-empty">—</td><td class="filled-answer">300</td></tr>
+                    <tr><td>Прибыль (убыток) от продолжающейся деятельности до налогообложения</td><td class="filled-empty">—</td><td class="filled-answer">300</td></tr>
+                    <tr><td>Налог на прибыль организаций</td><td class="filled-empty">—</td><td class="filled-answer">75</td></tr>
+                    <tr><td>отложенный налог на прибыль организаций</td><td class="filled-empty">—</td><td class="filled-answer">75</td></tr>
+                    <tr><td>Чистая прибыль (убыток)</td><td class="filled-empty">—</td><td class="filled-answer">225</td></tr>
+                </tbody>
+            </table>
+            <div class="hint-note">
+                <strong>📌 Пояснение:</strong> В 2027 году показатели не заполняются.<br>
+                Проценты к получению 2026 = 300 (из проводки Дт 62 Кт 84).<br>
+                Налог 2026 = 75 (списание ОНА).<br>
+                Чистая прибыль 2026 = 300 − 75 = 225.
+            </div>
+        </div>
     </div>
 </div>
 
@@ -610,6 +844,35 @@
     document.getElementById('resetPlBtn').addEventListener('click', resetPl);
     document.getElementById('checkPlBtn').addEventListener('click', checkPl);
     
+    // Подсказка: модальное окно с готовыми ответами
+    const hintBtn = document.getElementById('hintBtn');
+    const hintModal = document.getElementById('hintModal');
+    const closeHintBtn = document.getElementById('closeHintBtn');
+    
+    hintBtn.addEventListener('click', () => {
+        hintModal.classList.add('active');
+    });
+    closeHintBtn.addEventListener('click', () => {
+        hintModal.classList.remove('active');
+    });
+    hintModal.addEventListener('click', (e) => {
+        if (e.target === hintModal) hintModal.classList.remove('active');
+    });
+    
+    // Вкладки внутри подсказки
+    const hintTabBtns = document.querySelectorAll('.hint-tab-btn');
+    const hintTabContents = document.querySelectorAll('.hint-tab-content');
+    hintTabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.getAttribute('data-hint-tab');
+            hintTabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            hintTabContents.forEach(c => c.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
+    
+    // Основные вкладки
     const tabs = document.querySelectorAll('.tab-btn');
     const contents = document.querySelectorAll('.tab-content');
     tabs.forEach(btn => {
